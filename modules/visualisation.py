@@ -5,8 +5,8 @@ from sklearn.manifold import TSNE
 
 
 class Visualisation:
-    def __init__(self):
-        pass
+    def __init__(self, fig_size: tuple = (12, 6)):
+        self.fig_size = fig_size
 
     def plot_word_similarities_tsne_3d(self,
                                        tfidf_matrix: np.ndarray,
@@ -31,7 +31,7 @@ class Visualisation:
         coords = tsne.fit_transform(term_vectors)
 
         # Create 3D plot
-        fig = plt.figure(figsize=(12, 12))
+        fig = plt.figure(figsize=self.fig_size)
         ax = fig.add_subplot(111, projection='3d')
 
         # Plot all points in light grey
@@ -94,7 +94,7 @@ class Visualisation:
         tsne_embeddings = tsne.fit_transform(embeddings)
 
         # Create 3D plot
-        fig = plt.figure(figsize=(12, 12))
+        fig = plt.figure(figsize=self.fig_size)
         ax = fig.add_subplot(111, projection='3d')
 
         # Plot each subreddit with different color
@@ -132,7 +132,7 @@ class Visualisation:
         tsne_centroids = tsne.fit_transform(subreddit_centroids)
 
         # Create the 3D plot
-        fig = plt.figure(figsize=(12, 12))
+        fig = plt.figure(figsize=self.fig_size)
         ax = fig.add_subplot(111, projection='3d')
 
         # Plot vectors from origin to each point
