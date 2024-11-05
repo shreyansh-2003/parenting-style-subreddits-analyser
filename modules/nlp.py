@@ -118,10 +118,3 @@ class NLP:
             weighted_embeddings[doc_idx] = doc_vector
 
         return weighted_embeddings
-
-
-if __name__ == "__main__":
-    nlp = NLP()
-    text = "This is a sample text. It will be preprocessed."
-    tokenized_text = nlp.tokenize_text(text)
-    print(tokenized_text)

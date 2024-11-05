@@ -121,7 +121,7 @@ class Visualisation:
         """
         Plot embedding vectors in 3D space using t-SNE.
         """
-        # Calculate an average embedding for each subreddit
+        # Calculate a centroid for each subreddit
         subreddit_centroids = np.vstack(posts_df.groupby(
             'subreddit')[embeddings_column].mean().values)
 
