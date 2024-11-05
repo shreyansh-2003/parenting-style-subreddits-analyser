@@ -116,62 +116,55 @@ class Visualisation:
 
         return fig, ax
 
-    def plot_subreddit_vector_space(self, posts_df: pd.DataFrame, embeddings_column: str,
-                                    perplexity: int = 2, title=None, labels=None):
+    def plot_subreddit_vector_space_3d(self, posts_df: pd.DataFrame, embeddings_column: str,
+                                       perplexity: int = 2, title=None, labels=None):
         """
-        Plot embedding vectors in 2D space using t-SNE.
+        Plot embedding vectors in 3D space using t-SNE.
         """
         # Calculate an average embedding for each subreddit
         subreddit_centroids = np.vstack(posts_df.groupby(
             'subreddit')[embeddings_column].mean().values)
 
         # Reduce dimensionality using t-SNE
-        tsne = TSNE(n_components=2,
+        tsne = TSNE(n_components=3,
                     perplexity=perplexity,
                     random_state=42)
         tsne_centroids = tsne.fit_transform(subreddit_centroids)
 
-        # Create the plot
-        fig = plt.figure(figsize=(10, 10))
-        ax = plt.gca()
+        # Create the 3D plot
+        fig = plt.figure(figsize=(12, 12))
+        ax = fig.add_subplot(111, projection='3d')
 
         # Plot vectors from origin to each point
         colors = plt.cm.Paired(np.linspace(0, 1, len(tsne_centroids)))
 
-        for i, (x, y) in enumerate(tsne_centroids):
-            # Plot the vector from origin
-            plt.quiver(0, 0, x, y,
-                       angles='xy',
-                       scale_units='xy',
-                       scale=1,
-                       color=colors[i],
-                       width=0.005,
-                       label=labels[i] if labels is not None else f'Vector {i+1}')
+        for i, (x, y, z) in enumerate(tsne_centroids):
+            # Plot the vector from origin to point
+            ax.quiver(0, 0, 0,  # Start at origin
+                      x, y, z,   # Vector components
+                      color=colors[i],
+                      arrow_length_ratio=0.1,
+                      label=labels[i] if labels is not None else f'Vector {i+1}')
 
         # Style the plot
-        plt.grid(True, linestyle='--', alpha=0.7)
+        ax.grid(True, linestyle='--', alpha=0.3)
 
         # Set axis limits
-        max_val = np.max(np.abs(tsne_centroids)) * 1.1
-        plt.xlim(0, max_val)
-        plt.ylim(0, max_val)
-
-        # Make the plot square
-        ax.set_aspect('equal')
-
-        # Style the axes
-        ax.spines['left'].set_position('zero')
-        ax.spines['bottom'].set_position('zero')
-        ax.spines['right'].set_visible(False)
-        ax.spines['top'].set_visible(False)
+        max_val = np.max(np.abs(tsne_centroids)) * 1.3
+        ax.set_xlim([0, max_val])
+        ax.set_ylim([0, max_val])
+        ax.set_zlim([0, max_val])
 
         # Labels
-        plt.xlabel('t-SNE 1')
-        plt.ylabel('t-SNE 2')
-        plt.title(title or "Embedding Vectors in 2D Space")
+        ax.set_xlabel('t-SNE 1')
+        ax.set_ylabel('t-SNE 2')
+        ax.set_zlabel('t-SNE 3')
+        plt.title(title or "Embedding Vectors in 3D Space")
 
+        # Add legend
         plt.legend()
 
-        plt.tight_layout()
+        # Adjust view angle
+        ax.view_init(elev=20, azim=45)
 
         return fig, ax
