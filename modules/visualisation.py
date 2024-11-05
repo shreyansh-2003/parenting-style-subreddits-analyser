@@ -116,24 +116,29 @@ class Visualisation:
 
         return fig, ax
 
-    def plot_subreddit_vector_space(self, embeddings: np.ndarray, labels=None, perplexity=30, title=None):
+    def plot_subreddit_vector_space(self, posts_df: pd.DataFrame, embeddings_column: str,
+                                    perplexity: int = 2, title=None, labels=None):
         """
         Plot embedding vectors in 2D space using t-SNE.
         """
+        # Calculate an average embedding for each subreddit
+        subreddit_centroids = np.vstack(posts_df.groupby(
+            'subreddit')[embeddings_column].mean().values)
+
         # Reduce dimensionality using t-SNE
         tsne = TSNE(n_components=2,
                     perplexity=perplexity,
                     random_state=42)
-        tsne_embeddings = tsne.fit_transform(embeddings)
+        tsne_centroids = tsne.fit_transform(subreddit_centroids)
 
         # Create the plot
-        plt.figure(figsize=(10, 10))
+        fig = plt.figure(figsize=(10, 10))
         ax = plt.gca()
 
         # Plot vectors from origin to each point
-        colors = plt.cm.rainbow(np.linspace(0, 1, len(tsne_embeddings)))
+        colors = plt.cm.Paired(np.linspace(0, 1, len(tsne_centroids)))
 
-        for i, (x, y) in enumerate(tsne_embeddings):
+        for i, (x, y) in enumerate(tsne_centroids):
             # Plot the vector from origin
             plt.quiver(0, 0, x, y,
                        angles='xy',
@@ -143,16 +148,13 @@ class Visualisation:
                        width=0.005,
                        label=labels[i] if labels is not None else f'Vector {i+1}')
 
-            # Optionally plot endpoint markers
-            plt.scatter(x, y, color=colors[i], s=50, alpha=0.6)
-
         # Style the plot
         plt.grid(True, linestyle='--', alpha=0.7)
 
         # Set axis limits
-        max_val = np.max(np.abs(tsne_embeddings)) * 1.2
-        plt.xlim(-max_val, max_val)
-        plt.ylim(-max_val, max_val)
+        max_val = np.max(np.abs(tsne_centroids)) * 1.1
+        plt.xlim(0, max_val)
+        plt.ylim(0, max_val)
 
         # Make the plot square
         ax.set_aspect('equal')
@@ -164,13 +166,12 @@ class Visualisation:
         ax.spines['top'].set_visible(False)
 
         # Labels
-        plt.xlabel("Dimension 1")
-        plt.ylabel("Dimension 2")
+        plt.xlabel('t-SNE 1')
+        plt.ylabel('t-SNE 2')
         plt.title(title or "Embedding Vectors in 2D Space")
 
-        # Add legend if there aren't too many vectors
-        if len(tsne_embeddings) <= 10:  # only show legend for 10 or fewer vectors
-            plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+        plt.legend()
 
         plt.tight_layout()
-        return plt
+
+        return fig, ax
