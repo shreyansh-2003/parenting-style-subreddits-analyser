@@ -45,10 +45,10 @@ class Visualisation:
         ax.scatter(coords[top_indices, 0],
                    coords[top_indices, 1],
                    coords[top_indices, 2],
-                   c='red', alpha=0.8, s=150, zorder=2)
+                   c='red', alpha=0.8, s=100, zorder=2)
 
         # Calculate offset for labels to prevent overlap with points
-        offset = np.array([0.1, 0.1, 0.1])
+        offset = np.ptp(coords, axis=0) * 0.05  # 5% of range
 
         # Add labels for top terms with black background and white text
         for i, term in enumerate(top_terms):
@@ -68,6 +68,22 @@ class Visualisation:
                     ha='center',
                     va='center',
                     zorder=4)
+
+        # Set axis limits to ignore outliers
+        for dim in range(3):
+            dim_coords = coords[:, dim]
+            q1 = np.percentile(dim_coords, 25)
+            q3 = np.percentile(dim_coords, 75)
+            iqr = q3 - q1
+            lower = q1 - 1.5 * iqr
+            upper = q3 + 1.5 * iqr
+
+            if dim == 0:
+                ax.set_xlim(lower, upper)
+            elif dim == 1:
+                ax.set_ylim(lower, upper)
+            else:
+                ax.set_zlim(lower, upper)
 
         if subreddit:
             ax.set_title(
@@ -153,7 +169,6 @@ class Visualisation:
         ax.grid(True, linestyle='--', alpha=0.3)
 
         # Set axis limits to account for both positive and negative values
-        # Extend limits to 120% of max absolute value for better spacing
         max_val = np.max(np.abs(tsne_centroids)) * 1.2
 
         # Set the axis limits
