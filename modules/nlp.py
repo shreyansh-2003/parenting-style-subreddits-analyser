@@ -5,11 +5,12 @@ import numpy as np
 from tqdm import tqdm
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 
 nltk.download('stopwords', quiet=True)
 nltk.download('punkt_tab', quiet=True)
+nltk.download('wordnet', quiet=True)
 
 
 class NLP:
@@ -41,8 +42,12 @@ class NLP:
         filtered_tokens = [
             word for word in tokens if word not in self.stop_words]
 
+        # Lemmatize tokens
+        lemmatizer = WordNetLemmatizer()
+        lemmas = [lemmatizer.lemmatize(token) for token in filtered_tokens]
+
         # Combine tokens into a single string
-        token_string = ' '.join(filtered_tokens)
+        token_string = ' '.join(lemmas)
 
         # Return the tokenized text
         if len(token_string) == 0:
