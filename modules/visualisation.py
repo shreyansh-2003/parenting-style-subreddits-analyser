@@ -92,22 +92,21 @@ class Visualisation:
             ax.set_title(
                 f'Word Similarities (Top {n_highlight} Terms Highlighted)')
 
-        # Set axis labels
-        ax.set_xlabel('t-SNE 1')
-        ax.set_ylabel('t-SNE 2')
-        ax.set_zlabel('t-SNE 3')
-
         return fig, ax
 
-    def plot_tsne_3d(self, embeddings: np.ndarray, posts_df: pd.DataFrame,
-                     n_components: int = 3, perplexity: int = 30,
+    def plot_tsne_3d(self, posts_df: pd.DataFrame,
+                     embeddings_column: str = 'embeddings',
                      subreddit_column: str = 'subreddit',
-                     title: str = 't-SNE of Reddit posts'):
+                     title: str = 't-SNE of Reddit posts',
+                     perplexity: int = 30):
         """
         Plot word embeddings in 3D using t-SNE.
         """
+        # Convert embeddings to array
+        embeddings = np.vstack(posts_df[embeddings_column].values)
+
         # Reduce dimensionality using t-SNE
-        tsne = TSNE(n_components=n_components,
+        tsne = TSNE(n_components=3,
                     perplexity=perplexity,
                     random_state=42)
         tsne_embeddings = tsne.fit_transform(embeddings)
@@ -126,17 +125,16 @@ class Visualisation:
                        alpha=0.4,
                        s=15)
 
-        # Set labels and title
-        ax.set_xlabel('t-SNE 1')
-        ax.set_ylabel('t-SNE 2')
-        ax.set_zlabel('t-SNE 3')
+        # Set title
         ax.set_title(title)
         ax.legend()
 
         return fig, ax
 
-    def plot_subreddit_vector_space(self, posts_df: pd.DataFrame, embeddings_column: str,
-                                    perplexity: int = 2, title=None, labels=None):
+    def plot_subreddit_vector_space(self, posts_df: pd.DataFrame,
+                                    embeddings_column: str = 'embeddings',
+                                    perplexity: int = 2,
+                                    title=None, labels=None):
         """
         Plot embedding vectors using t-SNE.
         """
@@ -192,8 +190,11 @@ class Visualisation:
 
         return fig, ax
 
-    def plot_subreddit_vector_space_3d(self, posts_df: pd.DataFrame, embeddings_column: str,
-                                       perplexity: int = 2, title=None, labels=None):
+    def plot_subreddit_vector_space_3d(self, posts_df: pd.DataFrame,
+                                       embeddings_column: str = 'embeddings',
+                                       perplexity: int = 2,
+                                       title=None,
+                                       labels=None):
         """
         Plot embedding vectors in 3D space using t-SNE.
         """
