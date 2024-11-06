@@ -24,6 +24,8 @@
   - Pairwise Naive Bayes *(Shreyansh)*
     - Write code
     - Add results to presentation
+  - K-Means Clustering *(Shreyansh)*
+    - Find a meaningful way to cluster using Dim Reduction
   - Embeddings clusters *(Felix)*
     - Fix current graph
     - Make graph without parenting
