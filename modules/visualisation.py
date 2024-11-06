@@ -2,6 +2,9 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
+from modules.nlp import NLP
+
+nlp = NLP()
 
 
 class Visualisation:
@@ -116,20 +119,77 @@ class Visualisation:
 
         return fig, ax
 
+    def plot_subreddit_vector_space(self, posts_df: pd.DataFrame, embeddings_column: str,
+                                    perplexity: int = 2, title=None, labels=None):
+        """
+        Plot embedding vectors using t-SNE.
+        """
+        # Calculate a centroid for each subreddit
+        centroid_matrix = nlp.calculate_centroids(posts_df, embeddings_column)
+
+        # Reduce dimensionality using t-SNE
+        tsne = TSNE(n_components=2,
+                    perplexity=perplexity,
+                    random_state=42)
+        tsne_centroids = tsne.fit_transform(centroid_matrix)
+
+        # Create plot
+        fig, ax = plt.subplots(figsize=self.fig_size)
+
+        # Plot vectors from origin to each point
+        colors = plt.cm.Paired(np.linspace(0, 1, len(tsne_centroids)))
+
+        for i, (x, y) in enumerate(tsne_centroids):
+            # Plot the vector from origin to point
+            ax.quiver(0, 0,        # Start at origin
+                      x, y,         # Vector components
+                      color=colors[i],
+                      angles='xy',
+                      scale_units='xy',
+                      scale=1,
+                      label=labels[i] if labels is not None else f'Vector {i+1}')
+
+        # Style the plot
+        ax.grid(True, linestyle='--', alpha=0.3)
+
+        # Set axis limits to account for both positive and negative values
+        # Extend limits to 120% of max absolute value for better spacing
+        max_val = np.max(np.abs(tsne_centroids)) * 1.2
+
+        # Set the axis limits
+        plt.xlim(-max_val, 0)
+        plt.ylim(0, max_val)
+
+        # Move the y-axis to the right
+        plt.gca().yaxis.tick_right()
+        plt.gca().yaxis.set_label_position("right")
+
+        # Labels
+        ax.set_xlabel('t-SNE 1')
+        ax.set_ylabel('t-SNE 2')
+        plt.title(title or "Embedding Vectors in 2D Space")
+
+        # Add legend
+        plt.legend()
+
+        # Ensure equal aspect ratio for proper vector visualization
+        ax.set_aspect('equal')
+
+        return fig, ax
+
     def plot_subreddit_vector_space_3d(self, posts_df: pd.DataFrame, embeddings_column: str,
                                        perplexity: int = 2, title=None, labels=None):
         """
         Plot embedding vectors in 3D space using t-SNE.
         """
         # Calculate a centroid for each subreddit
-        subreddit_centroids = np.vstack(posts_df.groupby(
-            'subreddit')[embeddings_column].mean().values)
+        centroid_matrix = nlp.calculate_centroids(posts_df, embeddings_column)
 
         # Reduce dimensionality using t-SNE
         tsne = TSNE(n_components=3,
                     perplexity=perplexity,
                     random_state=42)
-        tsne_centroids = tsne.fit_transform(subreddit_centroids)
+        tsne_centroids = tsne.fit_transform(centroid_matrix)
 
         # Create the 3D plot
         fig = plt.figure(figsize=self.fig_size)

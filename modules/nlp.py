@@ -1,5 +1,6 @@
 import re
 import nltk
+import pandas as pd
 import numpy as np
 from tqdm import tqdm
 from nltk.tokenize import word_tokenize
@@ -66,7 +67,45 @@ class NLP:
 
         return tfidf_matrix, feature_names
 
-    def generate_tfidf_weighted_embeddings(self, tokens: list, word_vectors, feature_names: np.ndarray, tfidf_matrix):
+    def generate_embeddings(self, tokens: list, word_vectors):
+        """
+        Generate an average embedding for each document in a corpus based on its token embeddings.
+        """
+        if not isinstance(tokens, list):
+            raise ValueError("Tokens must be a list of strings.")
+
+        # Get embedding dimension from word vectors
+        embedding_dim = word_vectors.vector_size
+
+        # Initialize an array to store document embeddings
+        num_docs = len(tokens)
+        average_embeddings = np.zeros((num_docs, embedding_dim))
+
+        # For each document
+        for doc_idx in tqdm(range(num_docs), desc="Generating embeddings"):
+            # Get all tokens for the current document
+            doc_tokens = tokens[doc_idx].split()
+
+            # Filter to only tokens that exist in the word vectors
+            valid_tokens = [
+                token for token in doc_tokens if token in word_vectors]
+
+            # Skip documents with no valid tokens
+            if not valid_tokens:
+                continue
+
+            # Get embeddings for all valid tokens
+            token_embeddings = np.array(
+                [word_vectors[token] for token in valid_tokens]
+            )
+
+            # Compute the document's average embedding
+            average_embeddings[doc_idx] = np.mean(token_embeddings, axis=0)
+
+        return average_embeddings
+
+    def generate_tfidf_weighted_embeddings(self, tokens: list, word_vectors,
+                                           feature_names: np.ndarray, tfidf_matrix: np.ndarray):
         """
         Generate embeddings weighted by tokens' TF-IDF scores for each document in the corpus.
         """
@@ -88,33 +127,55 @@ class NLP:
 
         # For each document
         for doc_idx in tqdm(range(num_docs), desc="Generating weighted embeddings"):
-            doc_vector = np.zeros(embedding_dim)
-            total_weight = 0
-
             # Get the document's TF-IDF scores
             doc_tfidf = tfidf_matrix[doc_idx].toarray().flatten()
 
-            # For each token in the document
-            for token in tokens[doc_idx].split():
-                # Get the token's TF-IDF score
-                if not token in feature_names:
-                    continue
-                token_tfidf = doc_tfidf[feature_names.index(token)]
+            # Get all tokens for the current document
+            doc_tokens = tokens[doc_idx].split()
 
-                # If the token is in the word vectors
-                if token in word_vectors and token_tfidf > 0:
-                    # Get the token's embedding
-                    token_vector = word_vectors[token]
+            # # Filter to only tokens that exist in both word vectors and feature names
+            valid_tokens = [
+                token for token in doc_tokens
+                if token in word_vectors and token in feature_names
+            ]
 
-                    # Weight the embedding by the token's TF-IDF score
-                    doc_vector += token_tfidf * token_vector
-                    total_weight += token_tfidf
+            # Skip documents with no valid tokens
+            if not valid_tokens:
+                continue
 
-            # Normalize the document embedding by the total weight
-            if total_weight > 0:
-                doc_vector /= total_weight
+            # Get indices and TF-IDF scores for valid tokens
+            token_indices = [feature_names.index(
+                token) for token in valid_tokens]
+            token_tfidf_scores = doc_tfidf[token_indices]
 
-            # Store the document embedding
-            weighted_embeddings[doc_idx] = doc_vector
+            # Filter to tokens with positive TF-IDF scores
+            positive_mask = token_tfidf_scores > 0
+            if not np.any(positive_mask):
+                continue
+
+            valid_tokens = [token for token, mask in zip(
+                valid_tokens, positive_mask) if mask]
+            token_tfidf_scores = token_tfidf_scores[positive_mask]
+
+            # Get embeddings for all valid tokens
+            token_embeddings = np.array(
+                [word_vectors[token] for token in valid_tokens])
+
+            # Weight embeddings by TF-IDF scores
+            total_weight = np.sum(token_tfidf_scores)
+            if total_weight > 0:  # Avoid division by zero
+                weighted_sum = np.sum(
+                    token_embeddings * token_tfidf_scores[:, np.newaxis], axis=0)
+                weighted_embeddings[doc_idx] = weighted_sum / total_weight
 
         return weighted_embeddings
+
+    def calculate_centroids(self, posts_df: pd.DataFrame, embeddings_column: str) -> np.ndarray:
+        """
+        Calculate the centroid for each subreddit based on its embeddings.
+        """
+        subreddit_centroids = posts_df.groupby('subreddit')[embeddings_column].apply(
+            lambda x: np.mean(np.vstack(x), axis=0))
+        centroid_matrix = np.vstack(subreddit_centroids.values)
+
+        return centroid_matrix
