@@ -4,35 +4,36 @@
 ### Religions
 - Christianity
 - Islam
-- Hinduism
 - Atheism
 ### Operationalisation
 - We measure parenting styles based on the semantics of parenting content in religious subreddits.
 - We assume that if two religious subreddits have semantically similar parenting content, those religions have similar parenting styles. 
-## Work split
-### Avnee
-- Literature review
-- Making the presentation (with help from the team)
-### Shreyansh
-- Download data from Reddit
-- Text cleaning:
-  - Cleaned dataset ready in a DataFrame
-  - Columns:
-    - ID
-    - Title
-    - Text
-    - Author
-    - Created Time
-    - URL
-    - Score
-    - Subreddit
-### BC
-- Filtering titles to extract parenting content from subreddits:
-  - Use the title column from Shreyansh's Dataframe and an LLM
-- Presenting the presentation
-### Felix
-- Embeddings
-- Similarity metrics and visualisation
-## Work conventions
-- Work in branches
-- Presentation on Google Drive
+## Presentation Structure
+- **Introduction** (Avnee)
+  - Completed
+- **Research question** (Avnee)
+  - Completed
+- **Method** (Avnee and Shreyansh)
+  - Write content
+- **Results**
+  - Word similarities using t-SNE (Felix)
+    - Fix graphs
+    - Add graphs to presentation
+  - Naive Bayes feature importance (Felix)
+    - Add results to presentation
+  - Pairwise Naive Bayes (Shreyansh)
+    - Write code
+    - Add results to presentation
+  - Embeddings clusters (Felix)
+    - Fix current graph
+    - Make graph without parenting
+    - Add graphs to presentation
+  - Embeddings cosine similarity (Felix)
+    - Add results to presentation
+  - Post centroids graph (Felix)
+    - Fix graph
+    - Add graph to presentation
+- **Discussion and conclusion** (BC)
+  - Write content
+- **References** (Avnee)
+  - Completed
