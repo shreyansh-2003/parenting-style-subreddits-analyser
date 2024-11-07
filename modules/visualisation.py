@@ -169,9 +169,9 @@ class Visualisation:
         # Set axis limits to account for both positive and negative values
         max_val = np.max(np.abs(tsne_centroids)) * 1.05
 
-        # # Set the axis limits
-        plt.xlim(0, max_val)
-        plt.ylim(-max_val, 0)
+        # Set the axis limits
+        plt.xlim([-max_val, max_val])
+        plt.ylim([-max_val, max_val])
 
         # # Move the y-axis to the right
         # plt.gca().yaxis.tick_right()
